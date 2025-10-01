@@ -23,17 +23,32 @@ func saveJson[T any](filename string, data T) error {
 	return nil
 }
 
-func loadJson[T any](filename string, target *T) error {
+type TankLoadError struct {
+	isSafe			bool
+	message			string
+}
+
+func (err *TankLoadError) Error() string {
+	return err.message
+}
+
+func loadJson[T any](filename string, target *T) *TankLoadError {
 	file, err := os.Open(filename)
 	if err != nil {
-		return fmt.Errorf("failed to open file '%s': %w", filename, err)
+		return &TankLoadError{
+			isSafe: true,
+			message: fmt.Sprintf("failed to open file '%s': %v", filename, err),
+		}
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 
 	if err := decoder.Decode(target); err != nil {
-		return fmt.Errorf("failed to decode JSON: %w", err)
+		return &TankLoadError{
+			isSafe: false,
+			message: fmt.Sprintf("failed to decode JSON: %v", err),
+		}
 	}
 
 	return nil
@@ -58,7 +73,11 @@ func DataTankNew[T any](name string) (*DataTank[T], error) {
 	
 	err := loadJson(tankPath(name), &data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load DataTank '%s' data: %w", name, err)
+		if !err.isSafe {
+			return nil, fmt.Errorf("failed to load DataTank '%s' data: %w", name, err)
+		}
+
+		data = InitDefault[T]()
 	}
 
 	return &DataTank[T]{

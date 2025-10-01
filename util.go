@@ -2,6 +2,8 @@ package ktnuitygo
 
 import (
 	"math"
+	"reflect"
+
 	"github.com/emirpasic/gods/sets/hashset"
 )
 
@@ -89,3 +91,26 @@ func LastOrDefault[T any](slice []T, or T) T {
 }
 
 type ErrorConsumerFn func(error)
+
+func InitDefault[T any]() T {
+	var zero T
+	v := reflect.ValueOf(&zero).Elem()
+
+	if v.Kind() == reflect.Struct {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			if !field.CanSet() {
+				continue
+			}
+
+			switch field.Kind() {
+			case reflect.Map:
+				field.Set(reflect.MakeMap(field.Type()))
+			case reflect.Slice:
+				field.Set(reflect.MakeSlice(field.Type(), 0, 8))
+			}
+		}
+	}
+
+	return zero
+}
