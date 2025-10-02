@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 )
 
 func saveJson[T any](filename string, data T) error {
@@ -80,6 +81,8 @@ func DataTankNew[T any](name string) (*DataTank[T], error) {
 		data = InitDefault[T]()
 	}
 
+	verify(&data)
+
 	return &DataTank[T]{
 		name: name,
 		data: &data,
@@ -122,4 +125,26 @@ func DataTankSet[T any](d *DataTank[T], fn DataTankSetFn[T]) error {
 	return d.Save()
 }
 
+func verify[T any](inst *T) {
+	v := reflect.ValueOf(inst).Elem()
 
+	if v.Kind() == reflect.Struct {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			if !field.CanSet() || !field.CanInterface() {
+				continue
+			}
+
+			switch field.Kind() {
+			case reflect.Map:
+				if field.IsNil() {
+					field.Set(reflect.MakeMap(field.Type()))
+				}
+			case reflect.Slice:
+				if field.IsNil() {
+					field.Set(reflect.MakeSlice(field.Type(), 0, 8))
+				}
+			}
+		}
+	}
+}
