@@ -69,7 +69,7 @@ func DataTankSetDir(dir string) {
 }
 
 func DataTankNew[T any](name string) (*DataTank[T], error) {
-	data := GetDefault[T]()
+	data := InitDefault[T]()
 	
 	err := loadJson(tankPath(name), &data)
 	if err != nil {
