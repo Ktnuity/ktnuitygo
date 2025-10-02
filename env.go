@@ -220,7 +220,7 @@ func (e *EnvData) GetBoolOrDefault(name string, or bool) bool {
 }
 
 type EnvValueType interface {
-	~int8 | ~uint8 | ~int16 | ~uint16 | ~int32 | ~uint32 | ~int64 | ~uint64 | ~float32 | ~float64 | ~bool | ~string 
+	~int8 | ~uint8 | ~int16 | ~uint16 | ~int32 | ~uint32 | ~int64 | ~uint64 | ~float32 | ~float64 | ~bool | ~string
 }
 
 func GetEnvOrDefault[T EnvValueType](env *EnvData, name string, orElse T) T {

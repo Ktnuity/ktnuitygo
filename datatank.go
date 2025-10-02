@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 )
 
 func saveJson[T any](filename string, data T) error {
@@ -70,18 +69,14 @@ func DataTankSetDir(dir string) {
 }
 
 func DataTankNew[T any](name string) (*DataTank[T], error) {
-	data := InitDefault[T]()
-	
-	err := loadJson(tankPath(name), &data)
-	if err != nil {
-		if !err.isSafe {
-			return nil, fmt.Errorf("failed to load DataTank '%s' data: %w", name, err)
-		}
+	var data T
 
-		data = InitDefault[T]()
+	err := loadJson(tankPath(name), &data)
+	if err != nil && !err.isSafe {
+		return nil, fmt.Errorf("failed to load DataTank '%s' data: %w", name, err)
 	}
 
-	verify(&data)
+	verify(&data, true)
 
 	return &DataTank[T]{
 		name: name,
@@ -123,28 +118,4 @@ func DataTankGet[R any, T any](d *DataTank[T], fn DataTankGetFn[R, T]) *R {
 func DataTankSet[T any](d *DataTank[T], fn DataTankSetFn[T]) error {
 	fn(d.data)
 	return d.Save()
-}
-
-func verify[T any](inst *T) {
-	v := reflect.ValueOf(inst).Elem()
-
-	if v.Kind() == reflect.Struct {
-		for i := 0; i < v.NumField(); i++ {
-			field := v.Field(i)
-			if !field.CanSet() || !field.CanInterface() {
-				continue
-			}
-
-			switch field.Kind() {
-			case reflect.Map:
-				if field.IsNil() {
-					field.Set(reflect.MakeMap(field.Type()))
-				}
-			case reflect.Slice:
-				if field.IsNil() {
-					field.Set(reflect.MakeSlice(field.Type(), 0, 8))
-				}
-			}
-		}
-	}
 }
