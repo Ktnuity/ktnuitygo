@@ -3,7 +3,6 @@ package ktnuitygo
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"maps"
 	"os"
 	"strconv"
@@ -225,11 +224,7 @@ type EnvValueType interface {
 
 func GetEnvOrDefault[T EnvValueType](env *EnvData, name string, orElse T) T {
 	result, err := GetEnv[T](env, name)
-	if err != nil {
-		log.Printf("Failed to get env value for '%s': %v\n", name, err)
-		return orElse
-	}
-
+	if err != nil { return orElse }
 	return result
 }
 

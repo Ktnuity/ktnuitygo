@@ -101,11 +101,14 @@ func (d *DataTank[T]) Save() error {
 }
 
 func (d *DataTank[T]) Reload() error {
-	data := GetDefault[T]()
+	var data T
+
 	err := loadJson(tankPath(d.name), &data)
 	if err != nil {
 		return fmt.Errorf("failed to reload DataTank '%s' data: %w", d.name, err)
 	}
+
+	verify(&data, true)
 
 	d.data = &data
 	return nil
